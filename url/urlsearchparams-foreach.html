@@ -36,4 +36,45 @@ test(function() {
         assert_unreached(i);
     }
 }, "empty");
+
+test(function() {
+    const a = new URL("http://a.b/c?a=1&b=2&c=3");
+    const b = a.searchParams;
+    const c = [];
+    for (const i of b) {
+        if (i[0] === 'a') {
+            b.delete('b');
+        }
+        c.push(i);
+    }
+    assert_array_equals(c[0], ["a", "1"]);
+    assert_array_equals(c[1], ["c", "3"]);
+}, "delete next param during iteration");
+
+test(function() {
+    const a = new URL("http://a.b/c?a=1&b=2&c=3");
+    const b = a.searchParams;
+    const c = [];
+    for (const i of b) {
+        if (i[0] === 'a') {
+            b.delete('a');
+            // 'b=2' is now in the first slot, so the next iteration will see 'c=3'.
+        } else {
+            c.push(i);
+        }
+    }
+    assert_array_equals(c[0], ["c", "3"]);
+}, "delete current param during iteration");
+
+test(function() {
+    const a = new URL("http://a.b/c?a=1&b=2&c=3");
+    const b = a.searchParams;
+    const c = [];
+    for (const i of b) {
+        c.push(i[0]);
+        b.delete(i[0]);
+    }
+    assert_array_equals(c, ['a', 'c'], 'b should not have been seen by the loop');
+    assert_equals(String(b), 'b=2', 'b should remain');
+}, "delete every param seen during iteration");
 </script>
